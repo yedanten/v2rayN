@@ -4,7 +4,7 @@ namespace ServiceLib.Services.CoreConfig;
 /// 把 v2rayN 的节点(ProfileItem)转换成 mihomo(Clash.Meta) 的完整配置内容。
 /// 用于让 mihomo 核心直接承载普通节点（含 ShadowsocksR）。
 /// </summary>
-public class CoreConfigClashProfileService(CoreConfigContext context)
+public partial class CoreConfigClashProfileService(CoreConfigContext context)
 {
     private static readonly string _tag = "CoreConfigClashProfileService";
     private readonly Config _config = context.AppConfig;
@@ -25,6 +25,8 @@ public class CoreConfigClashProfileService(CoreConfigContext context)
 
             var proxy = BuildProxy(_node);
             var proxyName = proxy["name"]?.ToString() ?? _node.Address;
+            // 路由规则里如果指定了节点，GenRoutingRules 会把对应节点补进 proxies
+            var proxies = new List<object> { proxy };
 
             var yaml = new Dictionary<string, object>
             {
@@ -34,19 +36,31 @@ public class CoreConfigClashProfileService(CoreConfigContext context)
                 ["log-level"] = GetLogLevel(_config.CoreBasicItem.Loglevel),
                 ["ipv6"] = _config.ClashUIItem.EnableIPv6,
                 ["external-controller"] = $"{Global.Loopback}:{AppManager.Instance.StatePort2}",
-                ["proxies"] = new List<object> { proxy },
+                // GEOIP/GEOSITE 使用 dat 文件，复用 v2rayN 已经在 bin 目录维护的 geoip.dat/geosite.dat
+                ["geodata-mode"] = true,
+                ["proxies"] = proxies,
                 ["proxy-groups"] = new List<object>
                 {
                     new Dictionary<string, object>
                     {
-                        ["name"] = "PROXY",
+                        ["name"] = ClashProxyGroup,
                         ["type"] = "select",
                         ["proxies"] = new List<object> { proxyName },
                     },
                 },
-                ["rules"] = new List<object> { "MATCH,PROXY" },
+                // 按 v2rayN 当前选中的路由规则生成分流，而不是固定全局代理
+                ["rules"] = GenRoutingRules(proxies),
                 ["sniffer"] = BuildSniffer(),
             };
+
+            // 没有 dns 段时 mihomo 会用系统 DNS 解析直连域名：系统 DNS 被污染或失效
+            // （例如被改成已停服的地址、境外 DNS），国内域名会被解析到海外节点，
+            // 规则虽然命中 DIRECT，实际却在跨境访问，表现为"国内网站比代理还慢"
+            var dns = GenDns();
+            if (dns is not null)
+            {
+                yaml["dns"] = dns;
+            }
 
             if (_config.TunModeItem.EnableTun)
             {

@@ -481,6 +481,11 @@ public partial class OptionSettingViewModel : MyReactiveObject, ICloseable
                 default:
                     continue;
             }
+            if (type.IsNullOrEmpty())
+            {
+                // 下拉框未选中时保留原值：Enum.Parse(null) 会抛异常并中断整个"确定"保存流程
+                continue;
+            }
             item.CoreType = Enum.Parse<ECoreType>(type);
         }
         await Task.CompletedTask;

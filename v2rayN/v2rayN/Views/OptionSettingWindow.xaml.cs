@@ -144,7 +144,9 @@ public partial class OptionSettingWindow
             this.Bind(ViewModel, vm => vm.CoreType6, v => v.cmbCoreType6.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.CoreType7, v => v.cmbCoreType7.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.CoreType9, v => v.cmbCoreType9.Text).DisposeWith(disposables);
+            this.Bind(ViewModel, vm => vm.CoreType11, v => v.cmbCoreType11.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.CoreType14, v => v.cmbCoreType14.Text).DisposeWith(disposables);
+            this.Bind(ViewModel, vm => vm.CoreType15, v => v.cmbCoreType15.Text).DisposeWith(disposables);
 
             this.BindCommand(ViewModel, vm => vm.SaveCmd, v => v.btnSave).DisposeWith(disposables);
         });

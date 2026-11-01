@@ -19,6 +19,7 @@ public class FmtHandlerTests
         [EConfigType.WireGuard] = CreateWireguardProfile,
         [EConfigType.Anytls] = CreateAnytlsProfile,
         [EConfigType.Naive] = () => CreateNaiveProfile(false),
+        [EConfigType.ShadowsocksR] = CreateSsrProfile,
     };
 
     [Test]
@@ -482,6 +483,28 @@ public class FmtHandlerTests
         };
 
         item.SetTransportExtra(new TransportExtraItem { RawHeaderType = Global.None, });
+
+        return item;
+    }
+
+    private static ProfileItem CreateSsrProfile()
+    {
+        var item = new ProfileItem
+        {
+            ConfigType = EConfigType.ShadowsocksR,
+            Remarks = "ssr demo",
+            Address = "5.6.7.8",
+            Port = 1389,
+            Password = "ssr-pass",
+        };
+
+        item.SetProtocolExtra(new ProtocolExtraItem
+        {
+            SsMethod = "aes-256-cfb",
+            SsrProtocol = "auth_aes128_md5",
+            SsrObfs = "plain",
+            SsrProtocolParam = "45639:abc",
+        });
 
         return item;
     }

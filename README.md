@@ -135,6 +135,14 @@ Telegram Channel / Telegram 频道：
 
 「设置 → 核心类型」新增 **ShadowsocksR** 与 **Anytls** 两项，可分别为其选择核心（Xray / sing_box / mihomo）。
 
+### 6. 修复
+
+| 问题 | 修复 |
+| --- | --- |
+| 核心类型设置页里 ShadowsocksR / Anytls 选择后不保存，重新打开仍为空 | 补上两项下拉框与 ViewModel 的绑定；保存时空值不再触发 `Enum.Parse(null)` 异常（该异常会静默中断整个「确定」流程，导致本次所有设置都不生效） |
+| mihomo 核心忽略「路由」里选择的策略，始终全局代理 | `CoreConfigClashProfileService` 按当前路由规则生成 Clash 分流：`geosite:`→`GEOSITE`、`geoip:`→`GEOIP`、`domain:/full:/keyword:/regexp:`→`DOMAIN-SUFFIX/DOMAIN/DOMAIN-KEYWORD/DOMAIN-REGEX`、端口→`DST-PORT`、`network`→`NETWORK`、进程→`PROCESS-NAME/PROCESS-PATH`；端口与网络等「与」条件用 `AND` 逻辑规则组合；`geoip:private` 展开为私有网段；规则指定的节点会自动加进 `proxies`。`geodata-mode: true` 复用 v2rayN 维护的 `geoip.dat/geosite.dat`；引用到本地不存在的 GEOIP/GEOSITE 代码时跳过该条规则，避免 mihomo 因一条规则拒绝加载整份配置 |
+| 国内网站（百度等）访问极慢甚至打不开，`/connections` 里规则命中的是 `DIRECT`，实际却在跨境访问 | 直接原因在系统 DNS：网卡上被写死 `1.2.4.8`（sdns.cn，已停止服务，返回 `Query refused`）和 `1.1.1.1`，导致 `www.baidu.com` 解析到 `103.235.46.x`、`myip.ipip.net` 解析到 Cloudflare 等海外节点，`DIRECT` 变成跨境连接。代码侧同时补上 mihomo 的 `dns` 段：此前生成的配置没有 `dns`，mihomo 只能用系统 DNS 解析直连域名。现在按 v2rayN 的 DNS 设置生成 `dns`（`DirectDNS` 作 `nameserver`、`BootstrapDNS` 作 `default-nameserver` 并补国内公共 DNS 兜底、`FakeIP` 决定 `fake-ip`/`redir-host`），不再受系统 DNS 污染影响；走代理的域名本来就不做本地解析，所以不配置 `fallback`，避免境外 DoH 直连必然超时一轮 |
+
 ---
 
 ## Build / 构建

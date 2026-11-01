@@ -107,6 +107,34 @@ internal static class CoreConfigTestFactory
         return node;
     }
 
+    public static ProfileItem CreateSsrNode(ECoreType coreType, string indexId = "node-ssr-1",
+        string remarks = "demo-ssr")
+    {
+        var node = new ProfileItem
+        {
+            IndexId = indexId,
+            ConfigType = EConfigType.ShadowsocksR,
+            CoreType = coreType,
+            Remarks = remarks,
+            Address = "ssr.example.com",
+            Port = 1389,
+            Password = "pass",
+            Network = nameof(ETransport.raw),
+            StreamSecurity = string.Empty,
+            Subid = string.Empty,
+        };
+
+        node.SetProtocolExtra(node.GetProtocolExtra() with
+        {
+            SsMethod = "aes-256-cfb",
+            SsrProtocol = "auth_aes128_md5",
+            SsrObfs = "plain",
+            SsrProtocolParam = "45639:abc",
+        });
+
+        return node;
+    }
+
     public static ProfileItem CreateSocksNode(ECoreType coreType, string indexId = "node-socks-1",
         string remarks = "demo-socks")
     {
